@@ -5,19 +5,19 @@ import java.util.List;
 public class AccountBillingService {
 
 	public void cancelInvoiceAndRedistributeFunds(BillId id) {
-		Bill billToCancel = BillDAO.getInstance().findBill(id);
+		Bill billToCancel = getBillById(id);
 		if (billToCancel != null) {
 			ClientId cid = billToCancel.getClientId();
 
 			if (!billToCancel.isCancelled()) {
 				billToCancel.cancel();
 			}
-			BillDAO.getInstance().persist(billToCancel);
+			persistBill(billToCancel);
 
 			List<Allocation> allocationsToRedistribute = billToCancel.getAllocations();
 
 			for (Allocation allocationToRedistribute : allocationsToRedistribute) {
-				List<Bill> bills = BillDAO.getInstance().findAllByClient(cid);
+				List<Bill> bills = getBillsForClient(cid);
 				int amountToRedistribute = allocationToRedistribute.getAmount();
 
 				for (Bill billCandidate : bills) {
@@ -33,7 +33,7 @@ public class AccountBillingService {
 						}
 
 						billCandidate.addAllocation(newAllocation);
-						BillDAO.getInstance().persist(billCandidate);
+						persistBill(billCandidate);
 					}
 
 					if (amountToRedistribute == 0) {
@@ -44,5 +44,17 @@ public class AccountBillingService {
 		} else {
 			throw new BillNotFoundException();
 		}
+	}
+
+	protected List<Bill> getBillsForClient(ClientId clientId) {
+		return BillDAO.getInstance().findAllByClient(clientId);
+	}
+
+	protected void persistBill(Bill bill) {
+		BillDAO.getInstance().persist(bill);
+	}
+
+	protected Bill getBillById(BillId id) {
+		return BillDAO.getInstance().findBill(id);
 	}
 }
