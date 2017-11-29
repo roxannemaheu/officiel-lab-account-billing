@@ -5,35 +5,38 @@ import java.util.List;
 public class AccountBillingService {
 
 	public void cancelInvoiceAndRedistributeFunds(BillId id) {
-		Bill bill = BillDAO.getInstance().findBill(id);
-		if (!(bill == null)) {
-			ClientId cid = bill.getClientId();
+		Bill billToCancel = BillDAO.getInstance().findBill(id);
+		if (billToCancel != null) {
+			ClientId cid = billToCancel.getClientId();
 
-			if (bill.isCancelled() != true) bill.cancel();
-			BillDAO.getInstance().persist(bill);
+			if (!billToCancel.isCancelled()) {
+				billToCancel.cancel();
+			}
+			BillDAO.getInstance().persist(billToCancel);
 
-			List<Allocation> a = bill.getAllocations();
+			List<Allocation> allocationsToRedistribute = billToCancel.getAllocations();
 
-			for (Allocation al : a) {
-				List<Bill> bills = BillDAO.getInstance().findAllByClient(cid); int amount = al.getAmount();
+			for (Allocation allocationToRedistribute : allocationsToRedistribute) {
+				List<Bill> bills = BillDAO.getInstance().findAllByClient(cid);
+				int amountToRedistribute = allocationToRedistribute.getAmount();
 
-				for (Bill b : bills) {
-					if (bill != b) {
-						int remainingAmount = b.getRemainingAmount();
-						Allocation allocation;
-						if (remainingAmount <= amount) { allocation = new Allocation(remainingAmount);
-							amount -= remainingAmount;
+				for (Bill billCandidate : bills) {
+					if (billToCancel != billCandidate) {
+						int remainingAmount = billCandidate.getRemainingAmount();
+						Allocation newAllocation;
+						if (remainingAmount <= amountToRedistribute) {
+							newAllocation = new Allocation(remainingAmount);
+							amountToRedistribute -= remainingAmount;
 						} else {
-							allocation = new Allocation(amount);
-					amount = 0;
+							newAllocation = new Allocation(amountToRedistribute);
+							amountToRedistribute = 0;
 						}
 
-						b.addAllocation(allocation);
-						
-						BillDAO.getInstance().persist(b);
+						billCandidate.addAllocation(newAllocation);
+						BillDAO.getInstance().persist(billCandidate);
 					}
 
-					if (amount == 0) {
+					if (amountToRedistribute == 0) {
 						break;
 					}
 				}
