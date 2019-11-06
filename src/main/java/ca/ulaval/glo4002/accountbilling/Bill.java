@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Bill {
-	
+
+    private BillId id;
 	private ClientId clientId;
 	private List<Allocation> allocations = new ArrayList<>();
 	private boolean cancelled = false;
 	private int total;
-	
-	public Bill(ClientId clientId, int total) {
+
+	public Bill(BillId id, ClientId clientId, int total) {
+        this.id = id;
 		this.clientId = clientId;
 		this.total = total;
 	}
@@ -26,7 +28,7 @@ public class Bill {
 	public boolean isCancelled() {
 		return cancelled;
 	}
-	
+
 	public void addAllocation(Allocation allocation) {
 		allocations.add(allocation);
 	}

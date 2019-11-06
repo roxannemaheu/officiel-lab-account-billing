@@ -5,11 +5,15 @@ import java.util.List;
 public class AccountBillingService {
 
 	public void cancelInvoiceAndRedistributeFunds(BillId id) {
+	    if (id == null) {
+	        throw new InvalidIdException();
+        }
 		Bill bill = BillDAO.getInstance().findBill(id);
 		if (!(bill == null)) {
 			ClientId cid = bill.getClientId();
 
-			if (bill.isCancelled() != true) bill.cancel();
+			if (bill.isCancelled() != true)
+			bill.cancel();
 			BillDAO.getInstance().persist(bill);
 
 			List<Allocation> a = bill.getAllocations();
@@ -19,9 +23,8 @@ public class AccountBillingService {
 
 				for (Bill b : bills) {
 					if (bill != b) {
-						int remainingAmount = b.getRemainingAmount();
-						Allocation allocation;
-						if (remainingAmount <= amount) { allocation = new Allocation(remainingAmount);
+						int remainingAmount = b.getRemainingAmount(); Allocation allocation;
+						if (remainingAmount < amount || remainingAmount == amount ) { allocation = new Allocation(remainingAmount);
 							amount -= remainingAmount;
 						} else {
 							allocation = new Allocation(amount);
