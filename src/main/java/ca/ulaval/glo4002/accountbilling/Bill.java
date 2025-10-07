@@ -6,39 +6,53 @@ import java.util.List;
 public class Bill {
 
     private BillId id;
-	private ClientId clientId;
-	private List<Allocation> allocations = new ArrayList<>();
-	private boolean cancelled = false;
-	private int total;
+    private ClientId clientId;
+    private List<Allocation> allocations = new ArrayList<>();
+    private boolean cancelled = false;
+    private int total;
 
-	public Bill(BillId id, ClientId clientId, int total) {
+    public Bill(BillId id, ClientId clientId, int total) {
         this.id = id;
-		this.clientId = clientId;
-		this.total = total;
-	}
+        this.clientId = clientId;
+        this.total = total;
+    }
 
-	public ClientId getClientId() {
-		return clientId;
-	}
+    int createAllocation(int amount) {
+        int remainingAmount = getRemainingAmount();
+        Allocation allocation;
+        if (remainingAmount <= amount) {
+            allocation = new Allocation(remainingAmount);
+            amount -= remainingAmount;
+        } else {
+            allocation = new Allocation(amount);
+            amount = 0;
+        }
+        addAllocation(allocation);
+        return amount;
+    }
 
-	public void cancel() {
-		cancelled = true;
-	}
+    public ClientId getClientId() {
+        return clientId;
+    }
 
-	public boolean isCancelled() {
-		return cancelled;
-	}
+    public void cancel() {
+        cancelled = true;
+    }
 
-	public void addAllocation(Allocation allocation) {
-		allocations.add(allocation);
-	}
+    public boolean isCancelled() {
+        return cancelled;
+    }
 
-	public List<Allocation> getAllocations() {
-		return allocations;
-	}
+    public void addAllocation(Allocation allocation) {
+        allocations.add(allocation);
+    }
 
-	public int getRemainingAmount() {
-		return total - allocations.stream().mapToInt(Allocation::getAmount).sum();
-	}
+    public List<Allocation> getAllocations() {
+        return allocations;
+    }
+
+    public int getRemainingAmount() {
+        return total - allocations.stream().mapToInt(Allocation::getAmount).sum();
+    }
 
 }
